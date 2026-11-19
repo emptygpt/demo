@@ -19,7 +19,7 @@ n8n  Error Workflow ────▶ 飞书告警
 
 ## 当前状态
 
-飞书部分用 `FakeFeishu` 内存模拟（`FEISHU_MODE=fake`，默认），其余已完成并有测试覆盖（TDD，79 个用例）。
+飞书部分用 `FakeFeishu` 内存模拟（`FEISHU_MODE=fake`，默认），其余已完成并有测试覆盖（TDD，83 个用例）。
 `RealFeishu` 是占位，接入真实飞书时只需实现 `app/feishu.py` 里的两个方法。
 
 ## 目录
@@ -61,6 +61,21 @@ curl http://127.0.0.1:8000/summary/daily
 ```
 
 输出每次请求的状态码：新订单 201、重复 200、签名错 401。
+
+## 带 n8n 的完整演示（Shopify、飞书都是模拟）
+
+无需 Docker：`npx n8n start` + `uvicorn`。n8n 工作流里 API 地址是容器内的 `http://api:8000`，本地跑要换成 `http://127.0.0.1:<端口>`（详见 `n8n/README.md`）。
+
+```
+假 Shopify 订单 ─POST─▶ n8n /webhook/shopify-order ─▶ API /orders ─▶ SQLite + FakeFeishu
+查看模拟飞书：GET /fake/feishu            注入故障：POST /fake/feishu/fail?on=true
+```
+
+已实测（2026-11-19，n8n + API 本地运行）：
+- 5 个新订单 + 1 次重复推送 → 模拟飞书表 5 行、通知 5 条，日报 5 单 821.09 USD
+- 坏订单（缺 total_price）→ n8n 执行失败 → Error Workflow → `/alerts` → 飞书收到 `[告警] [n8n 错误] ...`
+- 飞书故障时下单 → 订单回滚不入库；恢复后同一订单重推成功，不丢单不重复
+- 每日汇总：接口 `GET /summary/daily?notify=true` 已验证；n8n 的 20:00 定时触发未实测
 
 ## 本地运行
 

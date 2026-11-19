@@ -89,6 +89,17 @@ def create_app(settings: Settings, store: OrderStore, feishu: FeishuClient) -> F
             raise HTTPException(status_code=502, detail="feishu error") from exc
         return {"status": "sent"}
 
+    if isinstance(feishu, FakeFeishu):
+
+        @app.get("/fake/feishu")
+        def get_fake_feishu() -> dict:
+            return {"records": feishu.records, "messages": feishu.messages}
+
+        @app.post("/fake/feishu/fail")
+        def post_fake_feishu_fail(on: bool) -> dict:
+            feishu.fail = on
+            return {"fail": feishu.fail}
+
     return app
 
 

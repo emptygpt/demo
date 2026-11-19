@@ -84,3 +84,7 @@ def send_orders(base_url: str, secret: str, count: int, *, post=None, start: int
     # 返回按发送顺序的 status_code 列表
 ```
 CLI：`python -m app.simulator --url http://127.0.0.1:8000 --secret S --count 5 [--duplicate-every 3]`，打印每次状态码。
+
+## 假飞书调试接口（仅 feishu 为 FakeFeishu 时注册，real 模式下不存在 → 404）
+- `GET /fake/feishu` → {"records": [...], "messages": [...]}
+- `POST /fake/feishu/fail?on=true|false` → 设置 fake.fail，返回 {"fail": bool}
