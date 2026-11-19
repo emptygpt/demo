@@ -1,0 +1,22 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      - FEISHU_MODE=${FEISHU_MODE:-fake}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  n8n:
+    image: n8nio/n8n
+    ports:
+      - "5678:5678"
+    volumes:
+      - ./n8n-data:/home/node/.n8n
+    depends_on:
+      - api
+    restart: unless-stopped
+    # n8n 工作流里访问 API 用 http://api:8000（同一个 compose 网络内的服务名）
