@@ -19,7 +19,7 @@ n8n  Error Workflow ────▶ 飞书告警
 
 ## 当前状态
 
-飞书部分用 `FakeFeishu` 内存模拟（`FEISHU_MODE=fake`，默认），其余已完成并有测试覆盖（TDD，67 个用例）。
+飞书部分用 `FakeFeishu` 内存模拟（`FEISHU_MODE=fake`，默认），其余已完成并有测试覆盖（TDD，79 个用例）。
 `RealFeishu` 是占位，接入真实飞书时只需实现 `app/feishu.py` 里的两个方法。
 
 ## 目录
@@ -50,6 +50,18 @@ pip install -r requirements-dev.txt
 pytest -q
 ```
 
+## 假 Shopify（不需要开发店和隧道）
+
+`app/simulator.py` 生成 Shopify 格式的假订单，带 HMAC 签名推到 webhook，可模拟重复推送：
+
+```bash
+SHOPIFY_WEBHOOK_SECRET=demo-secret uvicorn app.main:app &
+python -m app.simulator --url http://127.0.0.1:8000 --secret demo-secret --count 5 --duplicate-every 2
+curl http://127.0.0.1:8000/summary/daily
+```
+
+输出每次请求的状态码：新订单 201、重复 200、签名错 401。
+
 ## 本地运行
 
 ```bash
@@ -67,7 +79,7 @@ curl http://127.0.0.1:8000/health
 | D1（模拟）| 飞书打通（目前为 FakeFeishu，待接真实 API）| 写入多维表格 1 行 + 机器人发 1 条消息 |
 | D2 | Python 服务 | `POST /orders`：清洗 → SQLite 去重 → 写飞书 → 通知；配 n8n Error Workflow |
 | D3 | n8n 串联 | n8n Webhook → HTTP Request → Python，curl 样例订单走通 |
-| D4 | 接 Shopify | Partners 开发店 + 隧道，真实下单自动进表；HMAC 校验 |
+| D4（模拟）| 接 Shopify | 目前用 simulator 假订单 + HMAC 校验；真实开发店 + 隧道后续再接 |
 | D5 | 日报 + 交付 | `GET /summary/daily` 定时推送；docker-compose、架构图、演示视频 |
 
 ## 验收标准

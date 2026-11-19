@@ -69,3 +69,18 @@ def build_daily_text(summary: dict) -> str     # 含日期、订单数、金额
 - `GET /summary/daily?date=YYYY-MM-DD`（缺省今天）→ daily_summary 加 "text": build_daily_text；`?notify=true` 时同时 feishu.send_message(text)
 - 根据 `/orders` 与 webhook 的返回：duplicate 200，created 201
 - `POST /alerts`：body `{"text": str}`（n8n Error Workflow 调用）→ feishu.send_message("[告警] " + text) → 200 {"status":"sent"}；缺 text 422；FeishuError 502
+
+## app/simulator.py（假 Shopify，替代真实联调）
+```python
+def make_fake_order(n: int, *, now: datetime | None = None, rng: random.Random | None = None) -> dict
+    # Shopify 订单 JSON：id=1000000+n（int），name="#<1000+n>"，email、customer(first/last)、
+    # total_price(字符串，2位小数，>0)、currency="USD"、created_at(ISO，取 now，缺省当前时间)、
+    # line_items(1~3 项，title/quantity)。必须能被 parse_shopify_order 解析；同 n 同 rng seed 结果一致
+def sign_body(body: bytes, secret: str) -> str          # base64(HMAC-SHA256)，与 verify_shopify_hmac 配套
+def send_orders(base_url: str, secret: str, count: int, *, post=None, start: int = 1, duplicate_every: int = 0) -> list[int]
+    # 逐个 POST {base_url}/webhooks/shopify，body=json.dumps(order).encode()，header X-Shopify-Hmac-Sha256 + Content-Type
+    # post 默认 httpx.post，签名 post(url, content=..., headers=...) -> 有 status_code 的对象
+    # duplicate_every=k>0 时每第 k 单后再重发同一单一次（模拟 Shopify 重试）
+    # 返回按发送顺序的 status_code 列表
+```
+CLI：`python -m app.simulator --url http://127.0.0.1:8000 --secret S --count 5 [--duplicate-every 3]`，打印每次状态码。
