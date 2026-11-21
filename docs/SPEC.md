@@ -44,7 +44,7 @@ class FakeFeishu:                                  # 内存模拟，测试和 de
     records: list[dict]; messages: list[str]
     fail: bool = False                             # True 时两个方法都抛 FeishuError
     add_record 追加 fields 并返回 "rec_<序号>"；send_message 追加 text
-class RealFeishu:                                  # 暂不实现
+class RealFeishu:                                  # 已实现：add_record 写多维表格，send_message 按 FEISHU_CHAT_ID 发群消息（无群 id 时退回机器人 Webhook）
     所有方法 raise NotImplementedError("Feishu not connected yet")
 ```
 

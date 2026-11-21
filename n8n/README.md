@@ -6,7 +6,7 @@
 |---|---|
 | `order-flow.json` | Webhook（POST，path `shopify-order`）→ `POST http://api:8000/orders` |
 | `daily-summary.json` | 每天 20:00 → `GET http://api:8000/summary/daily?notify=true` |
-| `error-workflow.json` | Error Trigger → `POST http://api:8000/alerts`（接口后续添加，body `{"text": "..."}`） |
+| `error-workflow.json` | Error Trigger → `POST http://api:8000/alerts`（body `{"text": "..."}`） |
 
 ## 1. 启动
 

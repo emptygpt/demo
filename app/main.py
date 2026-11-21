@@ -1,6 +1,7 @@
 """FastAPI 入口（依据 docs/SPEC.md 的 app/main.py 一节）。"""
 
 import json
+import os
 from datetime import date
 
 from fastapi import FastAPI, HTTPException, Query, Request
@@ -106,7 +107,9 @@ def create_app(settings: Settings, store: OrderStore, feishu: FeishuClient) -> F
 def _build_default_app() -> FastAPI:
     settings = load_settings()
     store = OrderStore(settings.sqlite_path)
-    feishu: FeishuClient = RealFeishu() if settings.feishu_mode == "real" else FakeFeishu()
+    feishu: FeishuClient = (
+        RealFeishu.from_env(os.environ) if settings.feishu_mode == "real" else FakeFeishu()
+    )
     return create_app(settings, store, feishu)
 
 
